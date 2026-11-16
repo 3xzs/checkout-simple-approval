@@ -163,8 +163,8 @@ window.renderChrome = function () {
   const step = document.body.dataset.step;
   const mount = document.getElementById('site-header');
   if (!mount) return;
-  // Thomas' inbox is his own mail client, so no shop header there
-  const chrome = step === 'approver-inbox' ? '' : step === 'approver' ? APPROVER_HEADER : TOPBAR + BUYER_HEADER;
+  // Inboxes are the person's own mail client, so no shop header there
+  const chrome = step === 'approver-inbox' || step === 'email' ? '' : step === 'approver' ? APPROVER_HEADER : TOPBAR + BUYER_HEADER;
   mount.outerHTML = roleBar(step) + chrome;
 };
 window.LOGO_SVG = LOGO_SVG;

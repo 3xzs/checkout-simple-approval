@@ -193,8 +193,11 @@ window.pageActions = {
     commit();
   },
   load(el) {
-    loadIntoCart(findApproval(el.dataset.id)); commit(); toast('Warenkorb geladen');
-    document.getElementById('warenkorb')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const a = findApproval(el.dataset.id), reload = isLoaded(a), y = window.scrollY;
+    loadIntoCart(a); commit(); toast('Warenkorb geladen');
+    // "Im Warenkorb · neu laden" keeps the viewport where it is
+    if (reload) window.scrollTo(0, y);
+    else document.getElementById('warenkorb')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   },
 };
 modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
