@@ -136,6 +136,7 @@ function roItems(items) {
 /* ---------- render ---------- */
 function render() {
   document.getElementById('page').innerHTML = window.renderPage();
+  window.updateRoleSwitch?.();
   const badge = document.querySelector('[data-cart-badge]');
   if (badge) badge.textContent = S.items.length;
   const unread = S.approvals.filter(a => a.status !== 'pending' && !a.read).length;

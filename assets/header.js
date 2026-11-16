@@ -175,21 +175,27 @@ function roleBar(stepKey) {
   return `<div class="rolebar role-${key}" role="note">
   <div class="rolebar-inner">
     <span class="rb-role role-${key}"><span class="rb-avatar">${role.initials}</span><span>Sie sehen: <strong>${role.label}</strong> · ${role.person}</span></span>
-    <a class="rb-switch role-${otherKey}" href="#" data-role-switch="${otherKey}"><span class="rb-switch-hint">Ansicht wechseln</span><span class="rb-avatar">${other.initials}</span>Als ${other.person} weiter
+    <a class="rb-switch role-${otherKey}" href="#" data-role-switch="${otherKey}" hidden><span class="rb-switch-hint">Ansicht wechseln</span><span class="rb-avatar">${other.initials}</span>Als ${other.person} weiter
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
   </div>
 </div>`;
 }
 
-/* Where switching lands: the other person's next meaningful screen */
+/* The switch only appears when the prototype's next step belongs to the other person:
+   Lisa → Thomas once a request is waiting for him, Thomas → Lisa once he has answered. */
 function switchTarget(to) {
-  const approvals = typeof S !== 'undefined' ? S.approvals : []; // S lives in app.js
-  if (to === 'approver') return 'thomas-posteingang.html';
-  return approvals.some(a => a.status !== 'pending') ? 'email.html' : 'index.html';
+  const a = typeof S !== 'undefined' ? S.approvals[0] : null; // S lives in app.js; one approval at a time
+  if (!a) return null;
+  if (to === 'approver') return a.status === 'pending' ? 'thomas-posteingang.html' : null;
+  return a.status !== 'pending' ? 'email.html' : null;
 }
+window.updateRoleSwitch = function () {
+  const el = document.querySelector('[data-role-switch]'); if (!el) return;
+  el.hidden = !switchTarget(el.dataset.roleSwitch);
+};
 document.addEventListener('click', e => {
   const el = e.target.closest('[data-role-switch]'); if (!el) return;
-  e.preventDefault(); location.href = switchTarget(el.dataset.roleSwitch);
+  e.preventDefault(); const to = switchTarget(el.dataset.roleSwitch); if (to) location.href = to;
 });
 
 window.renderChrome = function () {
