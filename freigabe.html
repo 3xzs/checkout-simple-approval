@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Freigabe prüfen · Conrad Freigabe-Prototyp</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-step="approver">
+<div id="site-header"></div>
+<div id="page"></div>
+
+<script src="assets/header.js"></script>
+<script src="assets/app.js"></script>
+<script>
+/* ---------- Step 2: approver opens the read-only link ---------- */
+const requestedId = new URLSearchParams(location.search).get('id');
+const approval = () => (requestedId && findApproval(requestedId)) || S.approvals[0];
+
+window.renderPage = function () {
+  const r = approval();
+  if (!r) return `<div class="main" style="grid-template-columns:1fr;max-width:720px"><div class="card empty-state">
+    <h1>Link ungültig oder zurückgezogen</h1><p>Diese Freigabeanfrage ist nicht mehr gültig.</p></div></div>`;
+  const pending = r.status === 'pending', ok = r.status === 'approved', t = totals(r.snapshot);
+  const panel = pending ? `
+    <h2 class="panel-title">Ihre Entscheidung</h2>
+    ${totalsHtml(t)}
+    <hr class="divider">
+    <label class="field" id="nameField">
+      <span class="field-label">Ihr Name</span>
+      <input class="input" id="apName" autocomplete="name" value="${APPROVER}">
+      <span class="field-error">Bitte geben Sie Ihren Namen an.</span>
+    </label>
+    <label class="field">
+      <span class="field-label">Nachricht an ${BUYER.name} <span class="opt">(optional)</span></span>
+      <textarea class="textarea" id="apMsg" maxlength="500">${DEFAULT_REPLY}</textarea>
+    </label>
+    <div class="decision-row">
+      <button class="btn btn-danger" data-act="decide" data-decision="rejected">${sized(ICONS.x, 16)}Ablehnen</button>
+      <button class="btn btn-primary" data-act="decide" data-decision="approved">${sized(ICONS.check, 16)}Freigeben</button>
+    </div>
+    <div class="info-note"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+      <span>${BUYER.name} erhält Ihre Antwort per E-Mail und schließt die Bestellung anschließend selbst ab. Mit der Freigabe wird noch keine Bestellung ausgelöst.</span></div>` : `
+    <div style="text-align:center;padding:8px 0 16px">
+      <span class="success-check" style="${ok ? '' : 'background:var(--c-error-bg);color:var(--c-error)'}">${sized(ok ? ICONS.check : ICONS.x, 24)}</span>
+      <h2 class="panel-title" style="margin:16px 0 4px">${ok ? 'Bestellung freigegeben' : 'Bestellung abgelehnt'}</h2>
+      <p style="margin:0;color:var(--fg-muted)">Ihre Antwort wurde an ${BUYER.name} gesendet. Sie können diese Seite jetzt schließen.</p>
+    </div>
+    ${r.message ? `<div class="buyer-note"><div class="buyer-note-label">Ihre Nachricht</div>„${esc(r.message)}“</div>` : ''}
+    <hr class="divider">
+    ${totalsHtml(t)}`;
+  return `<div class="main">
+    <div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="request-intro"><span class="avatar">LW</span>
+          <div><h1>${BUYER.name} bittet um Freigabe dieser Bestellung</h1><p>${BUYER.company} · angefragt am ${fmtDateTime(r.createdAt)}</p></div></div>
+        ${r.note ? `<div class="buyer-note"><div class="buyer-note-label">Nachricht von ${BUYER.first}</div>${esc(r.note)}</div>` : ''}
+      </div>
+      <div class="ro-head">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <h2 class="cart-title" style="margin:0">Warenkorb</h2>
+          <span class="status-pill readonly">${ICONS.lock}Schreibgeschützte Ansicht</span>
+          ${pending ? '' : `<span class="status-pill ${r.status}">${ok ? 'Freigegeben' : 'Abgelehnt'}</span>`}
+        </div>
+        <span class="ro-meta">${t.lines} Artikel · ${t.count} Stück</span>
+      </div>
+      <div class="card ro-list" style="padding:0">${roItems(r.snapshot)}
+        <div class="ro-foot"><span>Tagesaktuelle Preise</span><span>Alle Preise netto zzgl. MwSt.</span></div></div>
+    </div>
+    <div class="card">${panel}</div>
+  </div>`;
+};
+
+window.pageActions = {
+  decide(el) {
+    const nameEl = document.getElementById('apName'), name = nameEl.value.trim();
+    if (!name) { document.getElementById('nameField').classList.add('has-error'); nameEl.focus(); return; }
+    decide(approval(), el.dataset.decision, name, document.getElementById('apMsg').value.trim());
+    commit(); window.scrollTo(0, 0); toast('Antwort gesendet');
+  },
+};
+
+boot();
+</script>
+</body>
+</html>

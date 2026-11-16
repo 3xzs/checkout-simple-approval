@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>E-Mail · Conrad Freigabe-Prototyp</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-step="email">
+<div id="site-header"></div>
+<div id="page"></div>
+
+<script src="assets/header.js"></script>
+<script src="assets/app.js"></script>
+<script>
+/* ---------- Step 3: buyer's inbox with the approver's answer ---------- */
+const answered = () => S.approvals.find(a => a.status !== 'pending');
+
+window.renderPage = function () {
+  const r = answered();
+  if (!r) return `<div class="mail-shell"><div class="mail-app" style="display:block">
+    <div class="mail-empty">Noch keine Benachrichtigung. Sobald die freigebende Person antwortet, erscheint hier eine E-Mail.
+    <div style="margin-top:16px"><a class="btn btn-secondary" href="index.html">Zum Warenkorb</a></div></div></div></div>`;
+  const ok = r.status === 'approved', t = totals(r.snapshot);
+  const subject = ok ? 'Ihre Bestellung wurde freigegeben' : 'Ihre Freigabeanfrage wurde abgelehnt';
+  const rows = r.snapshot.map(i => `<tr><td>${i.qty} × ${esc(i.name)}<br><span style="color:var(--fg-faint)">Bestell-Nr.: ${i.sku}</span></td><td>${eur(i.unitPrice * i.qty)}</td></tr>`).join('');
+  return `<div class="mail-shell"><div class="mail-app">
+    <div class="mail-top"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>
+      <span>Posteingang · <strong>${BUYER.email}</strong></span></div>
+    <div class="mail-list"><button class="mail-row active">
+      <div class="mail-row-from"><span>Conrad Electronic</span><span>${new Date(r.respondedAt).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}</span></div>
+      <div class="mail-row-subj">${subject}</div>
+      <div class="mail-row-prev">${esc(r.name)}: ${esc(r.message || (ok ? 'Bestellung freigegeben' : 'Bestellung abgelehnt'))}</div></button></div>
+    <div class="mail-view">
+      <div class="mail-meta"><h2>${subject}</h2>
+        <div><strong style="color:var(--fg)">Conrad Electronic &lt;service@conrad.de&gt;</strong></div><div>An: ${BUYER.email}</div></div>
+      <div class="mail-body">
+        <div class="mail-body-head">${window.LOGO_SVG}</div>
+        <div class="mail-body-content">
+          <span class="status-pill ${r.status}">${ok ? 'Freigegeben' : 'Abgelehnt'}</span>
+          <h1>${ok ? 'Gute Nachrichten: Ihre Bestellung wurde freigegeben' : 'Ihre Freigabeanfrage wurde abgelehnt'}</h1>
+          <p>Hallo ${BUYER.first},</p>
+          <p>${esc(r.name)} hat Ihre Freigabeanfrage vom ${fmtDateTime(r.createdAt)} über <strong>${eur(t.gross)}</strong> <strong>${ok ? 'freigegeben' : 'abgelehnt'}</strong>.</p>
+          ${r.message ? `<div class="mail-quote">„${esc(r.message)}“<br><span style="font-style:normal;font-size:12px;color:var(--fg-muted)">– ${esc(r.name)}</span></div>` : ''}
+          <p>${ok ? 'Laden Sie den freigegebenen Warenkorb unter „Freigaben“ und schließen Sie die Bestellung wie gewohnt ab.' : 'Passen Sie Ihren Warenkorb bei Bedarf an und fordern Sie anschließend eine neue Freigabe an.'}</p>
+          <a class="btn btn-primary" href="index.html#freigaben" style="margin:8px 0 16px">${ok ? 'Zu meinen Freigaben' : 'Warenkorb anpassen'}</a>
+          <table class="mail-table">${rows}<tr class="total"><td>Gesamtpreis inkl. MwSt.</td><td>${eur(t.gross)}</td></tr></table>
+        </div>
+        <div class="mail-foot">Conrad Electronic SE · Klaus-Conrad-Str. 1 · 92240 Hirschau</div>
+      </div>
+    </div>
+  </div></div>`;
+};
+
+boot();
+const r = answered();
+if (r && !r.read) { r.read = true; commit(); }
+</script>
+</body>
+</html>

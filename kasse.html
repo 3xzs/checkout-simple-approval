@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kasse · Conrad Freigabe-Prototyp</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-step="checkout">
+<div id="site-header"></div>
+<div id="page"></div>
+
+<script src="assets/header.js"></script>
+<script src="assets/app.js"></script>
+<script>
+/* ---------- Step 4: checkout ---------- */
+window.renderPage = function () {
+  const t = totals(S.items), st = status(), a = currentApproval();
+  const note = st === 'approved' ? `<div class="summary-approval-note">${sized(ICONS.check, 16)}Freigegeben von ${esc(a.name)}</div>`
+    : st === 'approved-changed' ? `<div class="live-notice">Die Freigabe von ${esc(a.name)} bezieht sich auf eine frühere Version des Warenkorbs.</div>`
+    : st === 'pending' ? '<div class="live-notice">Die Freigabeanfrage ist noch offen. Sie können trotzdem bestellen.</div>' : '';
+  return `<div class="main">
+    <div>
+      <h1 class="cart-title" style="margin:0 0 16px">Bestellung prüfen</h1>
+      <div class="card" style="margin-bottom:16px"><h2 class="panel-title">Liefer- und Rechnungsadresse</h2>
+        <div style="font-size:14px;line-height:22px">${BUYER.company}<br>z. Hd. ${BUYER.name}<br>Industriestraße 12<br>90441 Nürnberg</div></div>
+      <div class="card" style="margin-bottom:16px"><h2 class="panel-title">Zahlungsart</h2><div style="font-size:14px">Kauf auf Rechnung (30 Tage netto)</div></div>
+      <div class="card ro-list" style="padding:0">${roItems(S.items)}</div>
+    </div>
+    <div class="order-summary">
+      ${note}
+      ${totalsHtml(t)}
+      <button class="btn btn-primary btn-lg btn-block" data-act="placeOrder">Zahlungspflichtig bestellen</button>
+      <a class="btn btn-ghost btn-block" href="index.html" style="margin-top:8px">Zurück zum Warenkorb</a>
+    </div>
+  </div>`;
+};
+window.pageActions = {
+  placeOrder() { S.orderNo = newOrderNo(); save(); location.href = 'bestaetigung.html'; },
+};
+boot();
+</script>
+</body>
+</html>
