@@ -144,39 +144,28 @@ const APPROVER_HEADER = `<header class="header header-approver">
   </div>
 </header>`;
 
-const STEPS = [
-  { key: 'cart', href: 'index.html', label: 'Warenkorb', role: 'buyer' },
-  { key: 'approver', href: 'freigabe.html', label: 'Freigabe prüfen', role: 'approver' },
-  { key: 'email', href: 'email.html', label: 'E-Mail', role: 'buyer' },
-  { key: 'checkout', href: 'kasse.html', label: 'Kasse', role: 'buyer' },
-  { key: 'done', href: 'bestaetigung.html', label: 'Bestätigung', role: 'buyer' },
-];
 const ROLES = {
   buyer: { label: 'Einkäuferin', person: 'Lisa Wagner', initials: 'LW' },
   approver: { label: 'Freigebende Person', person: 'Thomas Becker', initials: 'TB' },
 };
 
+/* Prototype-only strip that says whose perspective the page shows */
 function roleBar(stepKey) {
-  const idx = Math.max(0, STEPS.findIndex(s => s.key === stepKey));
-  const cur = STEPS[idx], role = ROLES[cur.role], next = STEPS[idx + 1];
-  const steps = STEPS.map((s, i) => `<li><a href="${s.href}" class="rb-step ${i === idx ? 'current' : ''} ${i < idx ? 'past' : ''}" ${i === idx ? 'aria-current="step"' : ''}>
-      <span class="rb-num">${i + 1}</span><span class="rb-step-text"><span class="rb-step-label">${s.label}</span><span class="rb-step-role role-${s.role}">${ROLES[s.role].label}</span></span></a></li>`).join('');
-  return `<nav class="rolebar" aria-label="Prototyp-Navigation">
+  const key = stepKey.startsWith('approver') ? 'approver' : 'buyer', role = ROLES[key];
+  return `<div class="rolebar role-${key}" role="note">
   <div class="rolebar-inner">
-    <span class="rb-proto">Prototyp</span>
-    <span class="rb-role role-${cur.role}"><span class="rb-avatar">${role.initials}</span><span>Sie sehen: <strong>${role.label}</strong> · ${role.person}</span></span>
-    <ol class="rb-steps">${steps}</ol>
-    ${next ? `<a class="rb-next" href="${next.href}">Nächster Schritt: ${next.label} <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>`
-      : `<a class="rb-next" href="index.html?reset">Neu starten</a>`}
+    <span class="rb-role role-${key}"><span class="rb-avatar">${role.initials}</span><span>Sie sehen: <strong>${role.label}</strong> · ${role.person}</span></span>
   </div>
-</nav>`;
+</div>`;
 }
 
 window.renderChrome = function () {
   const step = document.body.dataset.step;
   const mount = document.getElementById('site-header');
   if (!mount) return;
-  mount.outerHTML = roleBar(step) + (step === 'approver' ? APPROVER_HEADER : TOPBAR + BUYER_HEADER);
+  // Thomas' inbox is his own mail client, so no shop header there
+  const chrome = step === 'approver-inbox' ? '' : step === 'approver' ? APPROVER_HEADER : TOPBAR + BUYER_HEADER;
+  mount.outerHTML = roleBar(step) + chrome;
 };
 window.LOGO_SVG = LOGO_SVG;
 })();

@@ -49,14 +49,31 @@ function loadIntoCart(a) {
 function status() {
   const a = currentApproval();
   if (!a) return 'none';
-  if (a.status === 'approved' && S.cartFrom.version !== S.version) return 'approved-changed';
+  const changed = S.cartFrom.version !== S.version;
+  if (a.status === 'pending' && changed) return 'none'; // request no longer matches this cart
+  if (a.status === 'approved' && changed) return 'approved-changed';
   return a.status;
 }
 const approvalLink = a => new URL('freigabe.html?id=' + a.id, location.href).href;
+const displayLink = a => 'https://www.conrad.de/freigabe/' + a.id; // what the link looks like in the real shop
+
+/* Prototype hand-off between perspectives: a clearly marked box, colored like the target's "Sie sehen" chip */
+const PERSONAS = {
+  buyer: { name: 'Lisa Wagner', initials: 'LW', role: 'Einkäuferin' },
+  approver: { name: 'Thomas Becker', initials: 'TB', role: 'Freigebende Person' },
+};
+function handoff(target, text, href) {
+  const p = PERSONAS[target];
+  return `<div class="handoff handoff-${target}">
+    <span class="handoff-label">Prototyp</span>
+    <span class="handoff-text">${text}</span>
+    <a class="handoff-btn" href="${href}"><span class="rb-avatar">${p.initials}</span>Als ${p.name} weiter ${ICONS.arrow}</a>
+  </div>`;
+}
 
 /* Deep links: make sure the step has what it needs to render something meaningful */
 function ensure(step) {
-  if (step === 'approver' || step === 'email') {
+  if (step === 'approver' || step === 'approver-inbox' || step === 'email') {
     if (!S.approvals.length) createApproval(DEFAULT_NOTE);
   }
   if (step === 'email' && !S.approvals.some(a => a.status !== 'pending')) {
@@ -95,11 +112,12 @@ const ICONS = {
   cartIn: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>',
 };
 const sized = (svg, n) => svg.replace('<svg', `<svg width="${n}" height="${n}"`);
-function toast(msg) {
+function toast(msg, action) {
   let el = document.querySelector('.toast');
   if (!el) { el = document.createElement('div'); el.className = 'toast'; el.setAttribute('role', 'status'); document.body.appendChild(el); }
-  el.textContent = msg; el.classList.add('show');
-  clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('show'), 2400);
+  el.innerHTML = esc(msg) + (action ? ` <a class="toast-action" href="${action.href}">${esc(action.label)}</a>` : '');
+  el.classList.toggle('has-action', !!action); el.classList.add('show');
+  clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('show'), action ? 6000 : 2400);
 }
 function totalsHtml(t) {
   return `<div class="summary-row"><span>Nettopreis</span><span>${eur(t.net)}</span></div>
@@ -130,7 +148,11 @@ function commit() { save(); render(); }
 
 /* Page actions; pages may add their own via window.pageActions */
 const ACTIONS = {
-  copy() { const a = currentApproval() || S.approvals[0]; if (a) navigator.clipboard?.writeText(approvalLink(a)).catch(() => {}); toast('Link kopiert'); },
+  copy() {
+    const a = currentApproval() || S.approvals[0]; if (!a) return;
+    navigator.clipboard?.writeText(approvalLink(a)).catch(() => {});
+    toast('Link kopiert', { href: 'thomas-posteingang.html', label: 'Als Thomas Becker weiter →' });
+  },
 };
 document.addEventListener('click', e => {
   const el = e.target.closest('[data-act]'); if (!el) return;

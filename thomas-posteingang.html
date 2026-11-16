@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Posteingang Thomas · Conrad Freigabe-Prototyp</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-step="approver-inbox">
+<div id="site-header"></div>
+<div id="page"></div>
+
+<script src="assets/header.js"></script>
+<script src="assets/app.js"></script>
+<script>
+/* ---------- Thomas' own inbox: Lisa has pasted the approval link into an e-mail ---------- */
+const THOMAS_EMAIL = 'thomas.becker@mueller-elektrotechnik.de';
+
+window.renderPage = function () {
+  const a = S.approvals[0], t = totals(a.snapshot);
+  const time = new Date(a.createdAt).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+  const subject = `Bitte um Freigabe: Warenkorb Conrad (${eur(t.gross)})`;
+  return `<div class="mail-shell approver-mail"><div class="mail-app">
+    <div class="mail-top"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>
+      <span>Posteingang · <strong>${THOMAS_EMAIL}</strong></span></div>
+    <div class="mail-list">
+      <button class="mail-row active unread">
+        <div class="mail-row-from"><span>${BUYER.name}</span><span>${time}</span></div>
+        <div class="mail-row-subj">${subject}</div>
+        <div class="mail-row-prev">Hallo Thomas, kannst du diese Bestellung bitte freigeben?</div></button>
+      <div class="mail-row muted">
+        <div class="mail-row-from"><span>Jana Krüger</span><span>Gestern</span></div>
+        <div class="mail-row-subj">Baubesprechung Halle 3 – Protokoll</div>
+        <div class="mail-row-prev">Anbei das Protokoll vom Dienstag …</div></div>
+      <div class="mail-row muted">
+        <div class="mail-row-from"><span>IT-Service</span><span>Mo.</span></div>
+        <div class="mail-row-subj">Wartungsfenster am Wochenende</div>
+        <div class="mail-row-prev">Am Samstag sind zwischen 8 und 12 Uhr …</div></div>
+    </div>
+    <div class="mail-view">
+      <div class="mail-meta"><h2>${subject}</h2>
+        <div><strong style="color:var(--fg)">${BUYER.name} &lt;${BUYER.email}&gt;</strong></div><div>An: ${THOMAS_EMAIL}</div></div>
+      <div class="mail-body">
+        <div class="mail-personal">
+          <p>Hallo Thomas,</p>
+          <p>kannst du diese Bestellung bitte freigeben?${a.note ? ` ${esc(a.note.replace(/[.!?]+$/, ''))}.` : ''}</p>
+          <p>Hier ist der Link zum Warenkorb (${t.lines} Artikel, ${eur(t.gross)} inkl. MwSt.):<br>
+            <a class="mail-link" href="${approvalLink(a)}">${displayLink(a)}</a></p>
+          <p class="mail-sig">Danke und viele Grüße<br>Lisa<br><br>${BUYER.name}<br>Einkauf · ${BUYER.company}</p>
+        </div>
+      </div>
+    </div>
+  </div></div>`;
+};
+
+boot();
+</script>
+</body>
+</html>
