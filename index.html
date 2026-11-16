@@ -149,7 +149,8 @@ window.renderPage = function () {
     none: `<div class="approval-cta"><button class="btn btn-secondary btn-block" data-act="openModal" ${empty ? 'disabled' : ''}>${ICONS.link}Freigabe anfordern</button>
       <div class="approval-cta-hint">Link teilen, z. B. per E-Mail oder Teams</div></div>`,
     pending: `<div class="approval-cta"><button class="btn btn-secondary btn-block" data-act="copy">${ICONS.link}Freigabe-Link kopieren</button>
-      <div class="approval-cta-hint"><span class="status-pill pending">Freigabe ausstehend</span></div></div>`,
+      <div class="approval-cta-hint"><span class="status-pill pending">Freigabe ausstehend</span></div>
+      ${handoff('approver', 'Thomas Becker hat den Link per E-Mail erhalten.', 'thomas-posteingang.html')}</div>`,
     approved: `<div class="summary-approval-note">${sized(ICONS.check, 16)}Freigegeben von ${esc(a?.name)}</div>`,
     'approved-changed': `<div class="approval-cta"><button class="btn btn-secondary btn-block" data-act="openModal">${ICONS.link}Neue Freigabe anfordern</button>
       <div class="approval-cta-hint">Warenkorb seit der Freigabe geändert</div></div>`,

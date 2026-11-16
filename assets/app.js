@@ -151,7 +151,7 @@ const ACTIONS = {
   copy() {
     const a = currentApproval() || S.approvals[0]; if (!a) return;
     navigator.clipboard?.writeText(approvalLink(a)).catch(() => {});
-    toast('Link kopiert', { href: 'thomas-posteingang.html', label: 'Als Thomas Becker weiter →' });
+    toast('Link kopiert');
   },
 };
 document.addEventListener('click', e => {

@@ -152,12 +152,27 @@ const ROLES = {
 /* Prototype-only strip that says whose perspective the page shows */
 function roleBar(stepKey) {
   const key = stepKey.startsWith('approver') ? 'approver' : 'buyer', role = ROLES[key];
+  const otherKey = key === 'buyer' ? 'approver' : 'buyer', other = ROLES[otherKey];
+  // Always-present switch to the other person; its target is resolved on click (see below)
   return `<div class="rolebar role-${key}" role="note">
   <div class="rolebar-inner">
     <span class="rb-role role-${key}"><span class="rb-avatar">${role.initials}</span><span>Sie sehen: <strong>${role.label}</strong> · ${role.person}</span></span>
+    <a class="rb-switch role-${otherKey}" href="#" data-role-switch="${otherKey}"><span class="rb-switch-hint">Ansicht wechseln</span><span class="rb-avatar">${other.initials}</span>Als ${other.person} weiter
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
   </div>
 </div>`;
 }
+
+/* Where switching lands: the other person's next meaningful screen */
+function switchTarget(to) {
+  const approvals = typeof S !== 'undefined' ? S.approvals : []; // S lives in app.js
+  if (to === 'approver') return 'thomas-posteingang.html';
+  return approvals.some(a => a.status !== 'pending') ? 'email.html' : 'index.html';
+}
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-role-switch]'); if (!el) return;
+  e.preventDefault(); location.href = switchTarget(el.dataset.roleSwitch);
+});
 
 window.renderChrome = function () {
   const step = document.body.dataset.step;
