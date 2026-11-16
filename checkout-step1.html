@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kasse – Conrad</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<div id="site-header"></div>
+<div id="page"></div>
+
+<script src="assets/header.js"></script>
+<script src="assets/app.js"></script>
+<script>
+const { eur, esc, BUYER } = App;
+App.mountHeader();
+App.mountDemoBar();
+
+function approvalLine(s) {
+  const st = App.status(s), r = s.request;
+  if (st === 'approved') return `<div class="summary-approval-note"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Freigegeben von ${esc(r.approverName)} am ${App.fmtDate(r.respondedAt)}</div>`;
+  if (st === 'approved-changed') return `<div class="live-notice">Die Freigabe von ${esc(r.approverName)} bezieht sich auf eine frühere Version des Warenkorbs.</div>`;
+  if (st === 'pending') return `<div class="live-notice">Die Freigabeanfrage ist noch offen. Sie können trotzdem bestellen.</div>`;
+  return '';
+}
+
+function render() {
+  const s = App.load(), t = App.totals(s.cart.items);
+  if (!s.cart.items.length) { location.href = 'index.html'; return; }
+  document.getElementById('page').innerHTML = `<div class="main">
+    <div>
+      <h1 class="cart-title" style="margin:0 0 16px">Bestellung prüfen</h1>
+      <div class="card" style="margin-bottom:16px">
+        <h2 class="panel-title">Liefer- und Rechnungsadresse</h2>
+        <div style="font-size:14px;line-height:22px">${esc(BUYER.company)}<br>z. Hd. ${esc(BUYER.name)}<br>Industriestraße 12<br>90441 Nürnberg</div>
+      </div>
+      <div class="card" style="margin-bottom:16px">
+        <h2 class="panel-title">Zahlungsart</h2>
+        <div style="font-size:14px">Kauf auf Rechnung (30 Tage netto)</div>
+      </div>
+      <div class="card ro-list" style="padding:0">
+        ${s.cart.items.map(i => `<div class="ro-item">${App.img(i, 64)}<div><div class="item-name">${esc(i.name)}</div>
+          <div class="ro-meta"><span>Bestell-Nr.: ${i.sku}</span><span>${esc(i.delivery)}</span></div>
+          <div class="ro-meta" style="margin-top:4px"><span>Menge: <span class="ro-qty">${i.qty} Stück</span></span></div></div>
+          <div class="ro-price"><div class="line">${eur(i.unitPrice * i.qty)}</div><div class="unit">${eur(i.unitPrice)} / Stück</div></div></div>`).join('')}
+      </div>
+    </div>
+    <div class="order-summary">
+      ${approvalLine(s)}
+      <div class="summary-row"><span>Nettopreis</span><span>${eur(t.net)}</span></div>
+      <div class="summary-row"><span>Versand</span>${t.shipping ? `<span>${eur(t.shipping)}</span>` : '<span class="summary-free">Kostenfrei</span>'}</div>
+      <div class="summary-row"><span>MwSt. (19 %)</span><span>${eur(t.vat)}</span></div>
+      <div class="summary-row total"><span>Gesamtpreis</span><span>${eur(t.gross)}</span></div>
+      <div class="summary-vat">inkl. MwSt.</div>
+      <button class="btn btn-primary btn-lg btn-block" id="placeOrder">Zahlungspflichtig bestellen</button>
+      <a class="btn btn-ghost btn-block" href="index.html" style="margin-top:8px">Zurück zum Warenkorb</a>
+    </div>
+  </div>`;
+  document.getElementById('placeOrder').addEventListener('click', placeOrder);
+}
+
+function placeOrder() {
+  const s0 = App.load(), st = App.status(s0);
+  const no = 'CO-' + Math.floor(10000000 + Math.random() * 89999999);
+  const gross = App.totals(s0.cart.items).gross;
+  App.update(s => {
+    s.orders.push({ no, at: Date.now(), items: s.cart.items, approvedBy: st === 'approved' ? s.request.approverName : null });
+    s.cart = { items: [], version: s.cart.version + 1 };
+    s.request = null;
+  });
+  App.refreshHeader(App.load());
+  document.getElementById('page').innerHTML = `<div class="main" style="grid-template-columns:1fr;max-width:720px"><div class="card empty-state">
+    <span class="success-check"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+    <h1>Vielen Dank für Ihre Bestellung</h1>
+    <p>Bestellnummer <strong>${no}</strong> über ${eur(gross)}. ${st === 'approved' ? `Freigegeben von ${esc(s0.request.approverName)}. ` : ''}Eine Bestellbestätigung wurde an ${esc(BUYER.email)} gesendet.</p>
+    <div style="margin-top:24px"><button class="btn btn-secondary" id="again">Demo neu starten</button></div></div></div>`;
+  document.getElementById('again').addEventListener('click', () => { App.reset(); location.href = 'index.html'; });
+}
+
+render();
+</script>
+</body>
+</html>

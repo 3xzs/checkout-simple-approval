@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Postfach (Demo)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<div id="site-header"></div>
+<div class="mail-shell">
+  <div class="mail-hint">Simuliertes E-Mail-Postfach des Käufers. Benachrichtigungen erscheinen hier, sobald die freigebende Person antwortet.</div>
+  <div class="mail-app">
+    <div class="mail-top"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>
+      <span>Posteingang · <strong id="mailUser"></strong></span></div>
+    <div class="mail-list" id="mailList"></div>
+    <div class="mail-view" id="mailView"></div>
+  </div>
+</div>
+
+<script src="assets/header.js"></script>
+<script src="assets/app.js"></script>
+<script>
+const { eur, esc, BUYER } = App;
+App.mountHeader();
+App.mountDemoBar();
+document.getElementById('mailUser').textContent = BUYER.email;
+const LOGO = document.querySelector('.logo svg').outerHTML;
+let selected = new URLSearchParams(location.search).get('id');
+
+function bodyHtml(m) {
+  const ok = m.decision === 'approved';
+  const first = BUYER.name.split(' ')[0];
+  const rows = m.items.map(i => `<tr><td>${i.qty} × ${esc(i.name)}<br><span style="color:var(--fg-faint)">Bestell-Nr.: ${i.sku}</span></td><td>${eur(i.unitPrice * i.qty)}</td></tr>`).join('');
+  return `<div class="mail-meta"><h2>${esc(m.subject)}</h2>
+      <div><strong style="color:var(--fg)">${esc(m.from)}</strong></div>
+      <div>An: ${esc(m.to)} · ${App.fmtDateTime(m.sentAt)}</div></div>
+    <div class="mail-body">
+      <div class="mail-body-head">${LOGO}</div>
+      <div class="mail-body-content">
+        <span class="status-pill ${m.decision}">${ok ? 'Freigegeben' : 'Abgelehnt'}</span>
+        <h1>${ok ? 'Gute Nachrichten: Ihre Bestellung wurde freigegeben' : 'Ihre Freigabeanfrage wurde abgelehnt'}</h1>
+        <p>Hallo ${esc(first)},</p>
+        <p>${esc(m.approverName)} hat Ihre Freigabeanfrage für den Warenkorb über <strong>${eur(m.totals.gross)}</strong> ${ok ? '<strong>freigegeben</strong>' : '<strong>abgelehnt</strong>'}.</p>
+        ${m.message ? `<div class="mail-quote">„${esc(m.message)}“<br><span style="font-style:normal;font-size:12px;color:var(--fg-muted)">– ${esc(m.approverName)}</span></div>` : ''}
+        <p>${ok ? 'Sie können die Bestellung jetzt wie gewohnt abschließen. Ihr Warenkorb ist gespeichert.' : 'Passen Sie Ihren Warenkorb bei Bedarf an und fordern Sie anschließend eine neue Freigabe an.'}</p>
+        <a class="btn btn-primary" href="index.html" style="margin:8px 0 16px">${ok ? 'Zum Warenkorb und bestellen' : 'Warenkorb anpassen'}</a>
+        <table class="mail-table">${rows}
+          <tr class="total"><td>Gesamtpreis inkl. MwSt.</td><td>${eur(m.totals.gross)}</td></tr></table>
+        <p style="color:var(--fg-muted);font-size:12px">Stand zum Zeitpunkt der Antwort. Preise und Verfügbarkeit im Warenkorb sind tagesaktuell.</p>
+      </div>
+      <div class="mail-foot">Conrad Electronic SE · Klaus-Conrad-Str. 1 · 92240 Hirschau<br>Diese E-Mail wurde automatisch versendet.</div>
+    </div>`;
+}
+
+function render() {
+  const s = App.load();
+  if (!selected && s.emails[0]) selected = s.emails[0].id;
+  const list = document.getElementById('mailList');
+  list.innerHTML = s.emails.length ? s.emails.map(m => `<button class="mail-row${m.read ? '' : ' unread'}${m.id === selected ? ' active' : ''}" data-id="${m.id}">
+      <div class="mail-row-from"><span>Conrad Electronic</span><span>${App.fmtTime(m.sentAt)}</span></div>
+      <div class="mail-row-subj">${esc(m.subject)}</div>
+      <div class="mail-row-prev">${esc(m.approverName)}: ${esc(m.message || (m.decision === 'approved' ? 'Bestellung freigegeben' : 'Bestellung abgelehnt'))}</div></button>`).join('')
+    : '<div class="mail-empty">Keine Nachrichten</div>';
+  const m = s.emails.find(e => e.id === selected);
+  document.getElementById('mailView').innerHTML = m ? bodyHtml(m)
+    : '<div class="mail-empty">Noch keine Benachrichtigung. Fordern Sie im Warenkorb eine Freigabe an und antworten Sie über den Link.</div>';
+  if (m && !m.read) { App.update(st => { const e = st.emails.find(x => x.id === m.id); if (e) e.read = true; }); App.refreshHeader(App.load()); list.querySelector(`[data-id="${m.id}"]`)?.classList.remove('unread'); }
+}
+
+document.getElementById('mailList').addEventListener('click', e => {
+  const row = e.target.closest('[data-id]'); if (!row) return;
+  selected = row.dataset.id; render();
+});
+App.onChange(s => { if (s.emails[0] && s.emails[0].id !== selected && !s.emails[0].read) { selected = s.emails[0].id; App.toast('Neue E-Mail eingegangen'); } render(); });
+render();
+</script>
+</body>
+</html>
