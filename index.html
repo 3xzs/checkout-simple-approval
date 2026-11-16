@@ -194,10 +194,10 @@ window.pageActions = {
     commit();
   },
   load(el) {
-    const a = findApproval(el.dataset.id), reload = isLoaded(a), y = window.scrollY;
+    // Loading this approval again (unchanged or after editing the cart) keeps the viewport where it is
+    const a = findApproval(el.dataset.id), again = S.cartFrom?.id === a.id, y = window.scrollY;
     loadIntoCart(a); commit(); toast('Warenkorb geladen');
-    // "Im Warenkorb · neu laden" keeps the viewport where it is
-    if (reload) window.scrollTo(0, y);
+    if (again) window.scrollTo(0, y);
     else document.getElementById('warenkorb')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   },
 };

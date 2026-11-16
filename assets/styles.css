@@ -707,6 +707,19 @@ body {
 .header-approver .header-row1 { margin-bottom: 0; flex-wrap: wrap; }
 .approver-header-label { font-size: 15px; font-weight: 500; padding-left: 16px; border-left: 1px solid rgba(255,255,255,.25); }
 .approver-header-secure { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #c3c8d2; }
+.checkout-steps { display: flex; align-items: center; gap: 8px; list-style: none; margin: 0 auto; padding: 0; font-size: 13px; color: #9aa1ad; }
+.checkout-steps li { display: inline-flex; align-items: center; gap: 8px; }
+.checkout-steps li + li::before { content: ""; width: 24px; height: 1px; background: rgba(255,255,255,.25); }
+.checkout-steps a { display: inline-flex; align-items: center; gap: 8px; color: inherit; text-decoration: none; }
+.checkout-steps a:hover { color: #fff; }
+.checkout-steps .current { color: #fff; font-weight: 600; }
+.cs-num { width: 22px; height: 22px; border-radius: 999px; border: 1px solid rgba(255,255,255,.35); display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+.checkout-steps .done .cs-num { background: #376EEF; border-color: #376EEF; color: #fff; }
+.checkout-steps .current .cs-num { background: #fff; border-color: #fff; color: #1b1f27; }
+.header-checkout .approver-header-secure { margin-left: 0; }
+@media (max-width: 900px) { .checkout-steps { order: 3; flex-basis: 100%; margin: 12px 0 0; } .header-checkout .approver-header-secure { margin-left: auto; } }
+@media (max-width: 768px) { .header-checkout .approver-header-label { flex-basis: auto; border-left: 1px solid rgba(255,255,255,.25); padding-left: 12px; } }
+@media (max-width: 560px) { .checkout-steps li:not(.current) { display: none; } .checkout-steps li + li::before { display: none; } .cs-ssl { display: none; } .header-checkout .logo svg { width: 120px; height: 30px; } }
 @media (max-width: 768px) { .approver-header-label { border-left: none; padding-left: 0; flex-basis: 100%; } .approver-header-secure { margin-left: 0; } }
 
 /* Approvals list on the cart page */

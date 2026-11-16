@@ -144,6 +144,24 @@ const APPROVER_HEADER = `<header class="header header-approver">
   </div>
 </header>`;
 
+const LOCK = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
+
+/* Reduced checkout header: no navigation or search, just progress and reassurance */
+const CHECKOUT_HEADER = `<header class="header header-approver header-checkout">
+  <div class="header-inner">
+    <div class="header-row1">
+      <a href="index.html?reset" class="logo" title="Prototyp neu starten" aria-label="Conrad">${LOGO_SVG}</a>
+      <span class="approver-header-label">Kasse</span>
+      <ol class="checkout-steps" aria-label="Bestellschritte">
+        <li class="done"><a href="index.html"><span class="cs-num">1</span>Warenkorb</a></li>
+        <li class="current" aria-current="step"><span class="cs-num">2</span>Bestellung prüfen</li>
+        <li><span class="cs-num">3</span>Bestätigung</li>
+      </ol>
+      <span class="approver-header-secure">${LOCK} Sichere Bestellung<span class="cs-ssl"> · SSL-verschlüsselt</span></span>
+    </div>
+  </div>
+</header>`;
+
 const ROLES = {
   buyer: { label: 'Einkäuferin', person: 'Lisa Wagner', initials: 'LW' },
   approver: { label: 'Freigebende Person', person: 'Thomas Becker', initials: 'TB' },
@@ -179,7 +197,10 @@ window.renderChrome = function () {
   const mount = document.getElementById('site-header');
   if (!mount) return;
   // Inboxes are the person's own mail client, so no shop header there
-  const chrome = step === 'approver-inbox' || step === 'email' ? '' : step === 'approver' ? APPROVER_HEADER : TOPBAR + BUYER_HEADER;
+  const chrome = step === 'approver-inbox' || step === 'email' ? ''
+    : step === 'approver' ? APPROVER_HEADER
+    : step === 'checkout' ? CHECKOUT_HEADER
+    : TOPBAR + BUYER_HEADER;
   mount.outerHTML = roleBar(step) + chrome;
 };
 window.LOGO_SVG = LOGO_SVG;
